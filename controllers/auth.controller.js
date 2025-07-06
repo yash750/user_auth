@@ -91,7 +91,7 @@ const login = async (req, res) => {
         user.refreshToken = refreshToken;
 
         // send the token in a cookie or as a response
-        res.cookie("acessToken", accessToken, { httpOnly: true });
+        res.cookie("accessToken", accessToken, { httpOnly: true });
         res.cookie("refreshToken", refreshToken, { httpOnly: true });
 
         await user.save();

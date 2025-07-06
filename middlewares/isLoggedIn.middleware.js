@@ -1,5 +1,10 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/user.model");
+require("dotenv").config(
+    {
+        path: "../.env",
+    }
+);
 const isloggedIn = async(req, res, next) => {
     const accessToken = req.cookies.accessToken;
     const refreshToken = req.cookies.refreshToken;
@@ -23,6 +28,7 @@ const isloggedIn = async(req, res, next) => {
             res.cookie("accessToken", newAccessToken, { httpOnly: true });
             req.user = decoded;
             next();
+            return;
         } catch (error) {
             console.log("Error in middleware: Invalid access token");
             return res.status(401).json({ status: false, message: "Unauthorized access" });
@@ -35,17 +41,20 @@ const isloggedIn = async(req, res, next) => {
             if (!user) {
                 return res.status(401).json({ status: false, message: "Unauthorized access" });
             }
+            
             const newAccessToken = jwt.sign({ id: user._id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: process.env.ACCESS_TOKEN_EXPIRY });
             const newRefreshToken = jwt.sign({ id: user._id }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: process.env.REFRESH_TOKEN_EXPIRY });
             user.refreshToken = newRefreshToken;
             await user.save();
+            
             res.cookie("refreshToken", newRefreshToken, { httpOnly: true });
             res.cookie("accessToken", newAccessToken, { httpOnly: true });
             req.user = decoded;
+            
             next();
         } catch (error) {
-            console.log("Error in middleware: Invalid refresh token");
-            return res.status(401).json({ status: false, message: "Unauthorized access" });
+            // console.log("Error in middleware: Invalid refresh token");
+            res.status(401).json({ status: false, message: "Unauthorized access" });
         }
     }
 
